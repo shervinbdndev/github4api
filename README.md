@@ -1,5 +1,6 @@
 <h1 align='center' style="font-size:5rem"><b>github4api</b></h1>
-<p align='center'><b>Version 1.1.3</b></p>
+<p align='center'><b>Version 1.1.4</b></p>
+<p align='center'><b>Written with Python 3.11.3</b></p>
 <div align="center">
     <div align="center">
         <img src="https://img.shields.io/github/license/shervinbdndev/github4api.svg"></img>
@@ -36,12 +37,21 @@
 
 <br>
 <h2 align='center'><b>WorkSpace</h2>
-<img src="https://img.shields.io/badge/Intel-Core_i5_10700K-0071C5?style=for-the-badge&logo=intel&logoColor=white"></img>
+<img src="https://img.shields.io/badge/Intel-Core_i5_10600K-0071C5?style=for-the-badge&logo=intel&logoColor=white"></img>
 <img src="https://img.shields.io/badge/NVIDIA-RTX2060 OC-76B900?style=for-the-badge&logo=nvidia&logoColor=white"></img>
 <img src="https://img.shields.io/badge/Windows11-0078D6?style=for-the-badge&logo=windows&logoColor=white"></img>
 
 
 <hr>
+
+<br><br><br>
+
+<h1 align='center' style='color:#ff0080; font-size:3rem;'><b>! Warning !</h1>
+
+
+- ## This package uses ``` ExceptionGroup ``` to handle exceptions.
+- ## You have to use python [3.11](https://www.python.org/downloads/) or above to be able to use this package.
+
 
 <br><br><br>
 <h1 align='left'><b>Update Your Interpreter</b></h1>
@@ -97,8 +107,8 @@ py -m pip install --upgrade github4api
 
 ```python
 from github4api.scraper import Scrape # Scraper Class
-from github4api.user_handler import UserHandler # User Handler Class
-from github4api.request_handler import RequestHandler # Request Handler Class
+from github4api.handlers.user_handler import UserHandler # User Handler Class
+from github4api.handlers.request_handler import RequestHandler # Request Handler Class
 
 
 def main():
@@ -141,13 +151,13 @@ if (__name__ == "__main__"):
 
 # New Changes on Version 1.1.3
 
-- ### Now you can Access Users Repositories Names
+- ### Now you can Access User's Repositories Names
 
 ```py
 
 from github4api.scraper import Scrape
-from github4api.user_handler import UserHandler
-from github4api.request_handler import RequestHandler
+from github4api.handlers.user_handler import UserHandler
+from github4api.handlers.request_handler import RequestHandler
 
 
 
@@ -182,6 +192,53 @@ if (__name__ == "__main__"):
 
 ```
 
+<br><br><br>
+
+# New Changes on Version 1.1.4
+
+## Now you can Access
+
+- ### User's Total Stars Given
+- ### User's Profile Picture Url
+- ### Check Repository Star Count
+
+```python
+
+from github4api.scraper import Scrape
+from github4api.handlers.user_handler import UserHandler
+from github4api.handlers.request_handler import RequestHandler
+
+
+
+def main():
+    request: RequestHandler = RequestHandler(
+        url=UserHandler(username='shervinbdndev').serialize()
+    ).sendGetRequest(content=True)
+    
+    scraper: Scrape = Scrape(data=request)
+    
+    scraper.startApi(log=False)
+    
+    print(scraper.totalStarsGiven) # total stars given
+    
+    print(scraper.profilePictureUrl) # profile picture url
+
+    # now using this new method you lets you check users repository's star count
+
+    print(scraper.checkRepositoryStars(
+        username='shervinbdndev', # user's username
+        repo_name='Quizino', # repository's name
+    ))
+
+
+
+
+if (__name__ == "__main__"):
+    main()
+
+```
+
+<br>
 
 <h1 align='left'>Enjoy :)</h1>
 

@@ -20,9 +20,13 @@ class RequestHandler:
         self.__url = url
         self.__data = None
         
+    @property
+    def url(self: Self) -> str:
+        return self.__url
+        
     def sendGetRequest(self: Self, content: bool = False) -> Union[int, bytes, Literal[None]]:
         try:
-            self.__data = requests.get(url=self.__url)
+            self.__data = requests.get(url=self.url)
             
         except* requests.ConnectionError as ce:
             raise ce.__doc__

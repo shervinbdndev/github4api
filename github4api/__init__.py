@@ -1,8 +1,7 @@
 if (__debug__):
     try:
+        from .handlers import RequestHandler, UserHandler
         from .scraper import Scrape
-        from .user_handler import UserHandler
-        from .request_handler import RequestHandler
     
     except* ModuleNotFoundError as mnfe:
         raise mnfe
