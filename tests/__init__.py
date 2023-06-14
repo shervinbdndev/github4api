@@ -1,6 +1,6 @@
 from github4api.scraper import Scrape
-from github4api.user_handler import UserHandler
-from github4api.request_handler import RequestHandler
+from github4api.handlers.user_handler import UserHandler
+from github4api.handlers.request_handler import RequestHandler
 
 
 

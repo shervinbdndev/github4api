@@ -1,5 +1,5 @@
 <h1 align='center' style="font-size:5rem"><b>github4api</b></h1>
-<p align='center'><b>Version 1.1.4</b></p>
+<p align='center'><b>Version 1.1.5</b></p>
 <p align='center'><b>Written with Python 3.11.3</b></p>
 <div align="center">
     <div align="center">
@@ -164,7 +164,7 @@ from github4api.handlers.request_handler import RequestHandler
 
 def main():
     request: RequestHandler = RequestHandler(
-        url=UserHandler(username='shervinbdndev').serialize(get_repos=True), # for accessing the repositories you should set get_repos param to True
+        url=UserHandler(username='shervinbdndev').serialize(),
     ).sendGetRequest(content=True)
     
     scraper: Scrape = Scrape(data=request)
@@ -235,6 +235,57 @@ def main():
 
 if (__name__ == "__main__"):
     main()
+
+```
+
+<br><br><br>
+
+# New Changes on Version 1.1.5
+
+## Now you can Access
+
+- ### User's Last Year Contributions
+- ### Check if User's Repository is Public Archive
+- ### Check if User has README.md
+- ### Get Repository's Used Languages
+- ### Get User's Unlocked Achievements
+
+
+```python
+
+
+from github4api.scraper import Scrape
+from github4api.handlers.user_handler import UserHandler
+from github4api.handlers.request_handler import RequestHandler
+
+
+
+
+def main():
+    user: UserHandler = UserHandler(username='shervinbdndev').serialize() # user instance
+    
+    request: RequestHandler = RequestHandler(url=user).sendGetRequest(content=True) # send request by RequestHandler
+    
+    scraper: Scrape = Scrape(data=request)
+    
+    scraper.startApi(log=False)
+    
+    print(scraper.lastYearContributions) # last year contributions
+    
+    print(scraper.isRepositoryPublicArchive(username='shervinbdndev', repo_name='Quizino')) # check if repository is public archive => returns True or False
+    
+    print(scraper.userHasReadMe(username='shervinbdndev')) # check if user has README.md
+
+    print(scraper.repositoryUsedLanguages(username='shervinbdndev', repo_name='github4api')) # get repository's used languages (also you can select by index)
+
+    print(scraper.userAchievements(username='shervinbdndev')) # get user's achievements (also you can select by index)
+    
+
+
+
+if (__name__ == "__main__"):
+    main()
+
 
 ```
 

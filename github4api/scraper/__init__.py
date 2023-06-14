@@ -3,11 +3,13 @@ if (__debug__):
         import re
         import sys
         import bs4
+        import requests
         from colorama.ansi import Fore
         from colorama.initialise import init
-        from typing import Self, Literal, Any
+        from typing import Self, Literal, Union, Any
         from ..handlers.user_handler import UserHandler
         from ..handlers.request_handler import RequestHandler
+        from ..exceptions import UserHasNoLocationException, NonePublicArchiveRepositoryException, NoneFilledPropertyException
     
     except* ModuleNotFoundError as mnfe:
         raise mnfe.__doc__
@@ -24,6 +26,7 @@ if (__debug__):
 
 class Scrape:
     def __init__(self: Self, data: RequestHandler) -> Literal[None]:
+        super(Scrape, self).__init__()
         self.__data = data
         self.__json_data = {}
         
@@ -37,7 +40,7 @@ class Scrape:
             attrs={
                 'class': 'p-name vcard-fullname d-block overflow-hidden',
             }
-        ).text
+        ).text.strip()
         
         return self.json_data['fullname']
     
@@ -74,43 +77,52 @@ class Scrape:
     
     @property
     def biography(self: Self) -> str:
-        self.__json_data['biography'] = bs4.BeautifulSoup(
-            markup=self.__data,
-            features='html5lib',
-        ).find(
-            name='div',
-            attrs={
-                'class': 'p-note user-profile-bio mb-3 js-user-profile-bio f4'
-            }
-        ).text
+        try:
+            self.__json_data['biography'] = bs4.BeautifulSoup(
+                markup=self.__data,
+                features='html5lib',
+            ).find(
+                name='div',
+                attrs={
+                    'class': 'p-note user-profile-bio mb-3 js-user-profile-bio f4'
+                }
+            ).text
+        except:
+            self.json_data['biography'] = NoneFilledPropertyException.__doc__
         
         return self.json_data['biography']
     
     @property
     def location(self: Self) -> str:
-        self.__json_data['location'] = bs4.BeautifulSoup(
-            markup=self.__data,
-            features='html5lib',
-        ).find(
-            name='span',
-            attrs={
-                'class': 'p-label',
-            }
-        ).text
+        try:
+            self.__json_data['location'] = bs4.BeautifulSoup(
+                markup=self.__data,
+                features='html5lib',
+            ).find(
+                name='span',
+                attrs={
+                    'class': 'p-label',
+                }
+            ).text
+        except:
+            self.__json_data['location'] = UserHasNoLocationException.__doc__
         
         return self.json_data['location']
     
     @property
     def website(self: Self) -> str:
-        self.__json_data['website'] = bs4.BeautifulSoup(
-            markup=self.__data,
-            features='html5lib',
-        ).find(
-            name='a',
-            attrs={
-                'class': 'Link--primary',
-            }
-        ).text
+        try:
+            self.__json_data['website'] = bs4.BeautifulSoup(
+                markup=self.__data,
+                features='html5lib',
+            ).find(
+                name='a',
+                attrs={
+                    'class': 'Link--primary',
+                }
+            ).text
+        except:
+            self.json_data['website'] = NoneFilledPropertyException.__doc__
         
         return self.json_data['website']
     
@@ -148,7 +160,7 @@ class Scrape:
     def repositoriesNames(self: Self, username: str, ftl: bool = False) -> list[str]:
         names: list = []
         
-        for element in bs4.BeautifulSoup(markup=self.__data, features='html5lib').find(name='h3', attrs={'class': 'wb-break-all'}).find_all_next(name='a', attrs={'itemprop': 'name codeRepository'}):
+        for element in bs4.BeautifulSoup(markup=RequestHandler(url=UserHandler(username=username).serialize(get_repos=True)).sendGetRequest(content=True), features='html5lib').find(name='h3', attrs={'class': 'wb-break-all'}).find_all_next(name='a', attrs={'itemprop': 'name codeRepository'}):
             names.append(str(element).replace('href', '').replace('itemprop="name codeRepository', '').replace(f'<a ="/{username}/', '').replace('</a>', '').replace('">', '').replace('"', '').split(sep=' ')[0])
         
         self.json_data['repositoriesNames'] = names
@@ -156,6 +168,66 @@ class Scrape:
         if (ftl):
             return names[::-1]
         return names
+    
+    def repositoryDescription(self: Self, username:str, repo_name: str, reverse: bool = False) -> str:
+        self.__json_data['repositoryDescription'] = bs4.BeautifulSoup(
+            markup=RequestHandler(url=UserHandler(username=username,).serialize(_=True, repo_name=repo_name)).sendGetRequest(content=True),
+            features='html5lib',
+        ).find(
+            name='p',
+            attrs={
+                'class': 'f4 my-3',
+            },
+        ).text.strip()
+        
+        if (reverse):
+            return self.json_data['repositoryDescription'][::-1]
+        return self.json_data['repositoryDescription']
+    
+    def isRepositoryPublicArchive(self: Self, username: str, repo_name: str) -> Union[str, bool, None]:
+        status: bool = False
+        
+        try:
+            self.__json_data['isRepositoryPublicArchive'] = bs4.BeautifulSoup(
+                markup=RequestHandler(url=UserHandler(username=username,).serialize(_=True, repo_name=repo_name)).sendGetRequest(content=True),
+                features='html5lib',
+            ).find(
+                name='span',
+                attrs={
+                    'class': 'Label Label--attention v-align-middle mr-1',
+                },
+            )
+        
+            if (self.__json_data['isRepositoryPublicArchive'].get_text(strip=True) == 'Public archive'):
+                status = True
+                return status
+            else:
+                return NonePublicArchiveRepositoryException.__doc__
+        except:
+            status = False
+            return status
+        
+    def repositoryUsedLanguages(self: Self, username: str, repo_name: str) -> Union[list[str], list[None]]:
+        langs: list[str] = []
+        
+        for lang in bs4.BeautifulSoup(markup=RequestHandler(url=UserHandler(username=username).serialize(_=True, repo_name=repo_name)).sendGetRequest(content=True), features='html5lib').find(name='ul', attrs={'class': 'list-style-none'}).find_all_next(name='span', attrs={'class': 'color-fg-default text-bold mr-1'}):
+            langs.append(lang.text)
+        return langs
+    
+    def userHasReadMe(self: Self, username: str) -> bool:
+        self.__json_data['userHasReadMe'] = requests.get(url=f'https://github.com/{username}/{username}')
+        
+        if (self.__json_data['userHasReadMe'].status_code == 200):
+            return True
+        return False
+    
+    def userAchievements(self: Self, username: str) -> list[str]:
+        achievements: list[str] = []
+        
+        for achievement in bs4.BeautifulSoup(markup=RequestHandler(url=UserHandler(username=username).serialize(get_achievements=True)).sendGetRequest(content=True), features='html5lib').find(name='div', attrs={'class': 'd-flex flex-wrap p-3'}).find_all_next(name='h3', attrs={'class': 'f4 ws-normal'}):
+            achievements.append(achievement.text)
+            
+        return achievements
     
     def checkRepositoryStars(self: Self, username: str, repo_name: str) -> int:
         self.__json_data['checkRepositoryStars'] = bs4.BeautifulSoup(
@@ -171,6 +243,24 @@ class Scrape:
         ).get_text()
         
         return self.json_data['checkRepositoryStars']
+    
+    @property
+    def lastYearContributions(self: Self) -> int:
+        self.__json_data['lastYearContributions'] = int(
+            str(
+                bs4.BeautifulSoup(
+                    markup=self.__data,
+                    features='html5lib',
+                ).find(
+                    name='h2',
+                    attrs={
+                        'class': 'f4 text-normal mb-2',
+                    }
+                ).text.strip()
+            ).split(sep=' ')[0]
+        )
+        
+        return self.json_data['lastYearContributions']
     
     @property
     def profilePictureUrl(self: Self) -> str:
@@ -205,6 +295,7 @@ class Scrape:
                 'website': self.website,
                 'totalRepositories': self.totalRepositories,
                 'totalStarsGiven': self.totalStarsGiven,
+                'lastYearContributions': self.lastYearContributions,
                 'profilePictureUrl': self.profilePictureUrl,
             }
         else:

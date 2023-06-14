@@ -9,7 +9,7 @@ with codecs.open(os.path.normpath(path=os.path.join(os.path.abspath(path=os.path
 
 setup(
     name="github4api",
-    version='1.1.4',
+    version='1.1.5',
     author="Shervin Badanara (shervinbdndev)",
     maintainer="Shervin Badanara",
     author_email="shervin2234@gmail.com",
